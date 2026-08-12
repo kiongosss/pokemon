@@ -1,0 +1,82 @@
+<div class="pokedex-table">
+  <div class="pokedex-table__filters">
+    <input
+      class="pokedex-table__search"
+      type="search"
+      placeholder="Search Pokémon"
+      (input)="onSearchInput($event)"
+    />
+
+    <select class="pokedex-table__type" (change)="setType($any($event.target).value)">
+      <option value="">All types</option>
+      @for (type of allTypes(); track type) {
+        <option [value]="type">{{ type }}</option>
+      }
+    </select>
+
+    <select class="pokedex-table__page-size" (change)="setPageSize($event)">
+      @for (size of pageSizes; track size) {
+        <option [value]="size" [selected]="pageSize() === size">{{ size }} / page</option>
+      }
+    </select>
+  </div>
+
+  <app-async-state [state]="view()" (retry)="pokemonStore.loadPage(20, 0)">
+    <table class="pokedex-table__grid">
+      <thead>
+        <tr>
+          <th (click)="setSort('id')"># {{ sortIndicator('id') }}</th>
+          <th>Sprite</th>
+          <th (click)="setSort('name')">Name {{ sortIndicator('name') }}</th>
+          <th (click)="setSort('height')">Height {{ sortIndicator('height') }}</th>
+          <th (click)="setSort('weight')">Weight {{ sortIndicator('weight') }}</th>
+          <th (click)="setSort('type')">Type {{ sortIndicator('type') }}</th>
+          <th (click)="setSort('hp')">HP {{ sortIndicator('hp') }}</th>
+          <th (click)="setSort('attack')">Atk {{ sortIndicator('attack') }}</th>
+          <th (click)="setSort('defense')">Def {{ sortIndicator('defense') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (pokemon of pageView().items; track pokemon.id) {
+          <tr class="pokedex-table__row" (click)="onRowClick(pokemon)">
+            <td>{{ pokemon.id }}</td>
+            <td>
+              @if (pokemon.sprite) {
+                <img [src]="pokemon.sprite" [alt]="pokemon.name" width="48" height="48" />
+              } @else {
+                <span>—</span>
+              }
+            </td>
+            <td>{{ pokemon.name }}</td>
+            <td>{{ pokemon.height }}</td>
+            <td>{{ pokemon.weight }}</td>
+            <td>
+              @for (type of pokemon.types; track type.type.name) {
+                <span>{{ type.type.name }}</span>
+                @if (!$last) {
+                  <span>, </span>
+                }
+              }
+            </td>
+            <td>{{ getStat(pokemon.stats, 'hp') }}</td>
+            <td>{{ getStat(pokemon.stats, 'attack') }}</td>
+            <td>{{ getStat(pokemon.stats, 'defense') }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <div class="pokedex-table__pagination">
+      <button (click)="previousPage()" [disabled]="page() === 0">Previous</button>
+      <span>Page {{ page() + 1 }} of {{ totalPages() }}</span>
+      <button (click)="nextPage()" [disabled]="page() >= totalPages() - 1">Next</button>
+    </div>
+  </app-async-state>
+
+  @if (selectedPokemonId()) {
+    <app-pokemon-detail-panel
+      [pokemonId]="selectedPokemonId()!"
+      (close)="closePanel()"
+    />
+  }
+</div>

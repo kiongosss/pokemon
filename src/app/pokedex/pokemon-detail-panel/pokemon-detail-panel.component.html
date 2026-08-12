@@ -1,0 +1,26 @@
+<div class="panel" [class.open]="pokemonId() !== null">
+  <button class="panel__close" type="button" (click)="close.emit()">Close</button>
+
+  @if (pokemon(); as p) {
+    <h2>{{ p.name }}</h2>
+    <img [src]="p.sprite" [alt]="p.name" width="96" height="96" />
+
+    <h3>Base stats</h3>
+    <canvas #chartCanvas></canvas>
+
+    <h3>Abilities</h3>
+    <ul>
+      @for (ability of abilities(); track ability.name) {
+        <li>
+          <strong>{{ ability.name }}</strong>
+          @if (ability.isHidden) {
+            <span>(hidden)</span>
+          }
+          — {{ ability.shortEffect }}
+        </li>
+      }
+    </ul>
+  } @else {
+    <p>Loading…</p>
+  }
+</div>
