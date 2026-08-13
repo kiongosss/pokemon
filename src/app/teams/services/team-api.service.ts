@@ -19,8 +19,8 @@ export const GET_TEAMS = `
 `;
 
 export const CREATE_TEAM = `
-  mutation CreateTeam($input: TeamInput!) {
-    createTeam(input: $input) {
+  mutation CreateTeam($trainer_id: ID!, $name: String!, $pokemon_ids: [String]!, $created_at: Date!) {
+    createTeam(trainer_id: $trainer_id, name: $name, pokemon_ids: $pokemon_ids, created_at: $created_at) {
       id
       trainer_id
       name
@@ -63,9 +63,13 @@ export class TeamApiService {
 
   /** Creates a new team on the mock server. */
   createTeam(input: TeamInput): Observable<Team> {
-    const payload = { ...input, created_at: new Date().toISOString() };
     return this.client
-      .query$<TeamCreateResponse>(MOCK_URL, CREATE_TEAM, { input: payload })
+      .query$<TeamCreateResponse>(MOCK_URL, CREATE_TEAM, {
+        trainer_id: input.trainer_id,
+        name: input.name,
+        pokemon_ids: input.pokemon_ids,
+        created_at: new Date().toISOString(),
+      })
       .pipe(map((response) => response.createTeam));
   }
 
