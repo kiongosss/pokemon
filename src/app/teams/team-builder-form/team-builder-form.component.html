@@ -1,0 +1,81 @@
+<form class="team-builder-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="team-builder-form__field">
+    <label class="team-builder-form__label" for="team-name">Team name</label>
+    <input
+      id="team-name"
+      class="team-builder-form__input"
+      type="text"
+      formControlName="name"
+    />
+    @if ((submitted() || form.controls.name.touched || form.controls.name.dirty) && form.controls.name.invalid) {
+      <div class="team-builder-form__errors">
+        @if (form.controls.name.errors?.['required']) {
+          <p>Team name is required.</p>
+        }
+        @if (form.controls.name.errors?.['minlength']) {
+          <p>Team name must be at least 3 characters.</p>
+        }
+        @if (form.controls.name.errors?.['maxlength']) {
+          <p>Team name must be at most 30 characters.</p>
+        }
+        @if (form.controls.name.errors?.['uniqueTeamName']) {
+          <p>Team name is already in use.</p>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="team-builder-form__field">
+    <label class="team-builder-form__label" for="pokemon-search">Add Pokémon</label>
+    <input
+      id="pokemon-search"
+      class="team-builder-form__input"
+      type="search"
+      placeholder="Search Pokémon"
+      (input)="onSearchInput($event)"
+    />
+    @if (showSuggestions()) {
+      <ul class="team-builder-form__suggestions">
+        @for (pokemon of pokemonSuggestions(); track pokemon.id) {
+          <li (click)="addPokemon(pokemon)">{{ pokemon.name }}</li>
+        }
+      </ul>
+    }
+  </div>
+
+  <div class="team-builder-form__field">
+    <div class="team-builder-form__chips">
+      @for (name of selectedPokemonNames(); track $index) {
+        <app-chip [label]="name" (remove)="removePokemon($index)"></app-chip>
+      }
+    </div>
+    @if ((submitted() || form.controls.pokemonIds.touched || form.controls.pokemonIds.dirty) && form.controls.pokemonIds.invalid) {
+      <div class="team-builder-form__errors">
+        @if (form.controls.pokemonIds.errors?.['minlength']) {
+          <p>Select at least one Pokémon.</p>
+        }
+        @if (form.controls.pokemonIds.errors?.['maxlength']) {
+          <p>You can select at most 6 Pokémon.</p>
+        }
+      </div>
+    }
+  </div>
+
+  <button
+    class="team-builder-form__submit"
+    type="submit"
+    [disabled]="isCreating()"
+  >
+    {{ isCreating() ? 'Saving…' : 'Create Team' }}
+  </button>
+</form>
+
+@if (toast(); as t) {
+  <div
+    class="team-builder-form__toast"
+    [class.team-builder-form__toast--success]="t.type === 'success'"
+    [class.team-builder-form__toast--error]="t.type === 'error'"
+  >
+    {{ t.message }}
+  </div>
+}
