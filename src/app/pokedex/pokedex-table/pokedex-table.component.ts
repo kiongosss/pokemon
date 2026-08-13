@@ -18,6 +18,7 @@ import { PokemonDetailPanelComponent } from '../pokemon-detail-panel/pokemon-det
   imports: [AsyncStateComponent, PokemonDetailPanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pokedex-table.component.html',
+  styleUrl: './pokedex-table.component.scss',
 })
 export class PokedexTableComponent {
   protected readonly pokemonStore = inject(PokemonStore);

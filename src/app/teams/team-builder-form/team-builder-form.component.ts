@@ -22,6 +22,7 @@ interface Toast {
   imports: [ReactiveFormsModule, ChipComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './team-builder-form.component.html',
+  styleUrl: './team-builder-form.component.scss',
 })
 export class TeamBuilderFormComponent {
   private readonly teamStore = inject(TeamStore);
