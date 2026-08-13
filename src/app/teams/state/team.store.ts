@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { BehaviorSubject, concat, EMPTY, Observable, of, Subject } from 'rxjs';
-import { catchError, distinctUntilChanged, finalize, map, shareReplay, switchMap, take, tap } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, finalize, map, mergeMap, shareReplay, take, tap } from 'rxjs/operators';
 
 import { GraphqlRequestError } from '../../core/graphql-client.service';
 import { Team, TeamInput } from '../models/team.model';
@@ -29,12 +29,13 @@ export class TeamStore {
 
   /**
    * Command stream for creating a team.
-   * Adds an optimistic record, switches to the API call, and replaces/removes the
-   * optimistic record on success/error. Share-replayed so the side effects run.
+   * Adds an optimistic record, merges each API call so rapid creates run in parallel,
+   * and replaces/removes the optimistic record on success/error. Share-replayed so
+   * the side effects run and late subscribers see the latest result.
    */
   readonly createResult$ = this.createRequests$.pipe(
     tap(() => this.pendingCreations$.next(this.pendingCreations$.getValue() + 1)),
-    switchMap((input) => this.handleCreate$(input)),
+    mergeMap((input) => this.handleCreate$(input)),
     shareReplay(1),
   );
 

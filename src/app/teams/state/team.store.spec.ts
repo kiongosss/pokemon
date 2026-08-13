@@ -94,4 +94,64 @@ describe('TeamStore', () => {
     expect(latest).toHaveLength(0);
     expect(lastError).toBe('Could not create team');
   });
+
+  it('resolves concurrent creates independently', () => {
+    const inputA: TeamInput = {
+      trainer_id: 'ash',
+      name: 'A',
+      pokemon_ids: ['1'],
+    };
+    const inputB: TeamInput = {
+      trainer_id: 'misty',
+      name: 'B',
+      pokemon_ids: ['2'],
+    };
+    const responses: Subject<Team>[] = [];
+
+    fakeApi.createTeam = vi.fn(() => {
+      const s = new Subject<Team>();
+      responses.push(s);
+      return s.asObservable();
+    });
+
+    let latest: Team[] = [];
+    store.teams$.subscribe((teams) => (latest = teams));
+
+    store.createTeam(inputA);
+    store.createTeam(inputB);
+
+    expect(latest).toHaveLength(2);
+    expect(latest[0].name).toBe('A');
+    expect(latest[1].name).toBe('B');
+    const tempIdA = latest[0].id;
+    const tempIdB = latest[1].id;
+
+    // Resolve B first (out of order) — A must remain with its temp id.
+    const realB: Team = {
+      id: 'team-b',
+      trainer_id: inputB.trainer_id,
+      name: inputB.name,
+      pokemon_ids: inputB.pokemon_ids,
+      created_at: '2024-01-02T00:00:00Z',
+    };
+    responses[1].next(realB);
+    expect(latest.find((t) => t.name === 'B')?.id).toBe('team-b');
+    expect(latest.find((t) => t.name === 'A')?.id).toBe(tempIdA);
+
+    // Resolve A.
+    const realA: Team = {
+      id: 'team-a',
+      trainer_id: inputA.trainer_id,
+      name: inputA.name,
+      pokemon_ids: inputA.pokemon_ids,
+      created_at: '2024-01-01T00:00:00Z',
+    };
+    responses[0].next(realA);
+
+    const ids = latest.map((t) => t.id);
+    expect(ids).toContain('team-a');
+    expect(ids).toContain('team-b');
+    expect(ids).not.toContain(tempIdA);
+    expect(ids).not.toContain(tempIdB);
+  });
 });
